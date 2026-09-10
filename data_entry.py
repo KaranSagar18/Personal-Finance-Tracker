@@ -1,16 +1,32 @@
-import pandas as pd
-import csv
 from datetime import datetime
 
-class CSV:
-    CSV_FILE = "Transactions.csv"
+date_format = "%d-%m-%Y"
 
-    @classmethod
-    def initialize_csv(cls):
-        try:
-            pd.read_csv(cls.CSV_FILE)
-        except FileNotFoundError:
-            df = pd.DataFrame(columns= ["date", "amount" , "type" , "description"])
-            df.to_csv( cls.CSV_FILE , index = False)
+def get_date(prompt , default_allowed = False):
+    date_str = input(prompt)
 
-CSV.initialize_csv()
+    if default_allowed and not date_str:
+        return datetime.today().strftime(date_format)
+
+    try: 
+        valid_date = datetime.strptime(date_str,date_format)
+        return valid_date.strftime(date_format)
+    except ValueError:
+        print("Invalid Date format. Please enter date in the format dd-mm-yyyy")
+        return get_date (prompt, default_allowed)
+
+def get_amount():
+    try: 
+        amount = float(input ( "Enter the amount : "))
+        if amount <= 0 :
+            raise ValueError ("Amount must be a non-negative and non-zero value")
+        return amount
+    except ValueError as e:
+        print(e)
+        get_amount() 
+
+def get_date():
+    pass
+
+def get_date():
+    pass
