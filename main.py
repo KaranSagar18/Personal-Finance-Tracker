@@ -27,7 +27,7 @@ class CSV:
         with open(cls.CSV_FILE , 'a' , newline= "") as csv_file:
             writer = csv.DictWriter(csv_file , fieldnames= cls.COLUMNS)
             writer.writerow(transaction)
-        print("New Transaction added succesfully!")
+        print("New Transaction added succesfully! \n")
 
     @classmethod
     def get_transactions (cls, start_date : str , end_date :str):
@@ -48,20 +48,41 @@ class CSV:
         total_income = filtered_df[filtered_df["type"] == "credit"] ["amount"].sum()
         total_expense = filtered_df[filtered_df["type"] == "debit"] ["amount"].sum()
 
-        print("\n Summary :")
+        print("\nSummary :")
         print(f"Total Income in the timeframe: Rs.{total_income:.2f}")
-        print(f"Total Expenses in the timeframe: Rs.{total_expense:.2f}")
+        print(f"Total Expenses in the timeframe: Rs.{total_expense:.2f} \n")
 
 
 def add() -> None:
     CSV.initialize_csv
-    ask_date = "Enter the date in the format 'dd-mm-yyyy' or press enter for today's date : "
+    ask_date = "Enter transaction date (dd-mm-yyyy) or press 'enter' for today's date : "
     date = get_date(ask_date, True)
     amount = get_amount()
     type = get_type()
     description = get_description()
     CSV.add_transaction(date,amount,type,description)
 
-CSV.get_transactions('01-08-2026','01-09-2026')
+def main():
+    print("\nMake a choice by selecting the corresponding number : ")
+    while True:
+        print("1. Add a transaction.")
+        print("2. View Transactions and a summary within a date range.")
+        print("3. Exit.")
+        choice = int(input("Enter your choice (1-3) : "))
+
+        if choice == 3:
+            break
+        elif choice == 1:
+            add()
+        elif choice == 2:
+            CSV.get_transactions(
+                get_date("Please enter the start date for the range (Leave blank for today's date) : ",True),
+                get_date("Please enter the end date for range (Leave blank for today's date) : ",True)
+                )
+        else: 
+            print("Please enter a valid choice : ")
+
+if __name__ == "__main__" :
+    main()
 
 
