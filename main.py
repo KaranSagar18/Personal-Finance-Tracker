@@ -2,6 +2,7 @@ import pandas as pd
 import csv
 from datetime import datetime
 from data_entry import get_date,get_type,get_amount,get_description
+from tabulate import tabulate
 
 class CSV:
     CSV_FILE = "Transactions.csv"
@@ -27,7 +28,10 @@ class CSV:
         with open(cls.CSV_FILE , 'a' , newline= "") as csv_file:
             writer = csv.DictWriter(csv_file , fieldnames= cls.COLUMNS)
             writer.writerow(transaction)
-        print("New Transaction added succesfully! \n")
+        print("New Transaction added succesfully!")
+        print(tabulate([transaction] , headers="keys" , tablefmt="grid"))
+        print()
+
 
     @classmethod
     def get_transactions (cls, start_date : str , end_date :str):
@@ -38,12 +42,19 @@ class CSV:
 
         mask = (df["date"] >= start_date) & (df["date"] <= end_date)
         filtered_df = df.loc[mask]
+        # filtered_df["date"] = filtered_df["date"].apply(lambda x : x.strftime(CSV.DATE_FORMAT))
 
         if filtered_df.empty:
             print("No transactions found in the specified date range")
         else:
             print(f"Transactions from {start_date.strftime(CSV.DATE_FORMAT)} to {end_date.strftime(CSV.DATE_FORMAT)} :")
-            print (filtered_df.to_string(index=False, formatters= {"date" : lambda x : x.strftime(CSV.DATE_FORMAT)}))
+            # print (filtered_df.to_string(index=False, formatters= {"date" : lambda x : x.strftime(CSV.DATE_FORMAT)}))
+            print(
+                tabulate(
+                    filtered_df.assign(date= filtered_df["date"].dt.strftime(CSV.DATE_FORMAT)),
+                    headers=CSV.COLUMNS,tablefmt="grid",showindex=False
+                )
+            )
 
         total_income = filtered_df[filtered_df["type"] == "credit"] ["amount"].sum()
         total_expense = filtered_df[filtered_df["type"] == "debit"] ["amount"].sum()
@@ -68,13 +79,13 @@ def main():
         print("1. Add a transaction.")
         print("2. View Transactions and a summary within a date range.")
         print("3. Exit.")
-        choice = int(input("Enter your choice (1-3) : "))
+        choice = input("Enter your choice (1-3) : ")
 
-        if choice == 3:
+        if choice == '3':
             break
-        elif choice == 1:
+        elif choice == '1':
             add()
-        elif choice == 2:
+        elif choice == '2':
             CSV.get_transactions(
                 get_date("Please enter the start date for the range (Leave blank for today's date) : ",True),
                 get_date("Please enter the end date for range (Leave blank for today's date) : ",True)
