@@ -3,6 +3,7 @@ import csv
 from datetime import datetime
 from data_entry import get_date,get_type,get_amount,get_description
 from tabulate import tabulate
+import matplotlib.pyplot as plt
 
 class CSV:
     CSV_FILE = "Transactions.csv"
@@ -34,7 +35,7 @@ class CSV:
 
 
     @classmethod
-    def get_transactions (cls, start_date : str , end_date :str):
+    def get_transactions (cls, start_date : str , end_date :str) -> pd.DataFrame:
         df = pd.read_csv(CSV.CSV_FILE)
         df["date"] = pd.to_datetime(df["date"],format=CSV.DATE_FORMAT)
         start_date = datetime.strptime(start_date,CSV.DATE_FORMAT)
@@ -62,7 +63,31 @@ class CSV:
         print("\nSummary :")
         print(f"Total Income in the timeframe: Rs.{total_income:.2f}")
         print(f"Total Expenses in the timeframe: Rs.{total_expense:.2f} \n")
+        return filtered_df
 
+def plot_transactions(df : pd.DataFrame) -> None:
+    df.set_index("date", inplace=True)
+
+    income_df = (
+        df[df["type"]=='credit'] ["amount"]
+        .resample('D')
+        .sum()
+        )
+    expense_df = (
+        df[df["type"]=='debit'] ["amount"]
+        .resample('D')
+        .sum()
+        )
+    # print(income_df.to_string())
+    plt.figure(figsize=(10,5))
+    plt.plot(income_df.index, income_df, label='Income', color='g')
+    plt.plot(expense_df.index, expense_df, label='Expense', color='r')
+    plt.xlabel("Date")
+    plt.ylabel("Amount")
+    plt.title("Income & Expense in the Time Range")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
 def add() -> None:
     CSV.initialize_csv
@@ -79,17 +104,19 @@ def main():
         print("1. Add a transaction.")
         print("2. View Transactions and a summary within a date range.")
         print("3. Exit.")
-        choice = input("Enter your choice (1-3) : ")
+        choice = input("Enter your choice (1-3) : ").lstrip('0')
 
         if choice == '3':
             break
         elif choice == '1':
             add()
         elif choice == '2':
-            CSV.get_transactions(
+            df = CSV.get_transactions(
                 get_date("Please enter the start date for the range (Leave blank for today's date) : ",True),
                 get_date("Please enter the end date for range (Leave blank for today's date) : ",True)
                 )
+            if input("Do you wish to see the graph for the above transactions? (y/n) : ").lower() == 'y':
+                plot_transactions(df)
         else: 
             print("Please enter a valid choice : ")
 
