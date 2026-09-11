@@ -63,10 +63,13 @@ class CSV:
         print("\nSummary :")
         print(f"Total Income in the timeframe: Rs.{total_income:.2f}")
         print(f"Total Expenses in the timeframe: Rs.{total_expense:.2f} \n")
+        print(f"Net Savings in the timeframe: Rs.{total_income-total_expense:.2f} \n")
+
         return filtered_df
 
 def plot_transactions(df : pd.DataFrame) -> None:
     df.set_index("date", inplace=True)
+    df.sort_index(inplace=True)
 
     income_df = (
         df[df["type"]=='credit'] ["amount"]
@@ -78,7 +81,6 @@ def plot_transactions(df : pd.DataFrame) -> None:
         .resample('D')
         .sum()
         )
-    # print(income_df.to_string())
     plt.figure(figsize=(10,5))
     plt.plot(income_df.index, income_df, label='Income', color='g')
     plt.plot(expense_df.index, expense_df, label='Expense', color='r')
@@ -107,6 +109,7 @@ def main():
         choice = input("Enter your choice (1-3) : ").lstrip('0')
 
         if choice == '3':
+            print("Thank you for using the Expense Tracker... Exiting now ...")
             break
         elif choice == '1':
             add()
