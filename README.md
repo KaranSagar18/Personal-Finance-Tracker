@@ -183,17 +183,9 @@ The application also provides an option to display a graph showing income and ex
 
 ### Income & Expense Graph
 
-Add a screenshot of the generated graph.
 
 ![Income and expense graph](screenshots/financial_graph.png)
 
-## Data Privacy
-
-The application stores transaction data locally in `Transactions.csv`.
-
-The actual transaction data should **not** be committed to a public GitHub repository if it contains personal financial information.
-
-A sample CSV containing fictional transactions can be used for demonstration purposes instead.
 
 ## What I Learned
 
