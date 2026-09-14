@@ -82,13 +82,13 @@ def plot_transactions(df : pd.DataFrame) -> None:
         .sum()
         )
     plt.figure(figsize=(10,5))
-    plt.plot(income_df.index, income_df, label='Income', color='g')
-    plt.plot(expense_df.index, expense_df, label='Expense', color='r')
+    plt.plot(income_df.index, income_df, label='Income', color='g', marker='o')
+    plt.plot(expense_df.index, expense_df, label='Expense', color='r', marker = 'o')
     plt.xlabel("Date")
     plt.ylabel("Amount")
     plt.title("Income & Expense in the Time Range")
     plt.legend()
-    plt.grid(True)
+    plt.grid(True,linestyle="dashed")
     plt.show()
 
 def add() -> None:
