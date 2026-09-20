@@ -15,6 +15,11 @@ def create_transaction_table():
             );'''
         )
 
+def id_exists(id):
+    with sqlite3.connect(db_file) as conn:
+        cursor = conn.cursor()
+        return cursor.execute('SELECT * FROM transactions WHERE id = ?',(id,)).fetchall()
+
 def add_transaction(date,amount,type,description):
     with sqlite3.connect(db_file) as conn:
         cursor = conn.cursor()
@@ -31,4 +36,10 @@ def delete_transaction(id_to_delete):
     with sqlite3.connect(db_file) as conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM transactions WHERE id = ?",(id_to_delete,))
+        return cursor.rowcount == 1
+
+def update_transaction(id,date , amount, type, description):
+    with sqlite3.connect(db_file) as conn:
+        cursor = conn.cursor()
+        cursor.execute('UPDATE transactions SET date = ?, amount = ?, type = ?, description =? WHERE id = ?',(date,amount,type,description,id))
         return cursor.rowcount == 1

@@ -2,7 +2,7 @@ import pandas as pd
 from data_entry import get_date,get_type,get_amount,get_description
 from tabulate import tabulate
 import matplotlib.pyplot as plt
-from database import add_transaction,get_transactions,create_transaction_table,delete_transaction
+from database import add_transaction,get_transactions,create_transaction_table,delete_transaction,id_exists,update_transaction
 
 def list_to_df(list_of_trans : list) -> pd.DataFrame:
     df = pd.DataFrame(list_of_trans,columns=["Trans_ID","Date","Amount","Type","Description"])
@@ -43,7 +43,6 @@ def add() -> None:
     id = add_transaction(date,amount,transaction_type,description)
     print(f"Transaction added successfully ! Transaction ID : {id}")
     
-
 def transactions():
     start_date = get_date("Please enter the start date for the range (Leave blank for today's date) : ",True)
     end_date = get_date("Please enter the end date for range (Leave blank for today's date) : ",True)
@@ -60,7 +59,8 @@ def transactions():
     print(f"Total Income in the timeframe: Rs.{total_income:.2f}")
     print(f"Total Expenses in the timeframe: Rs.{total_expense:.2f} \n")
     print(f"Net Savings in the timeframe: Rs.{total_income-total_expense:.2f} \n")
-    plot_transactions(df)
+    if input("Do you wish to see graph for the above transactions? (Y/N) : ").lower() == 'y':
+        plot_transactions(df)
 
 def delete():
     while True:
@@ -74,7 +74,38 @@ def delete():
         print(f"Transaction ID {del_id} deleted successfully")
     else:
         print(f"Transaction ID {del_id} not found")
-        
+
+def get_by_id():
+    while True:
+        try:
+            i = int(input("Enter the transaction ID : "))
+            break
+        except ValueError:
+            print("Invalid ID!")
+    transaction = id_exists(i)
+    if not transaction:
+        print("Provided transaction ID doesn't exist")
+    else:
+        print(tabulate(transaction,headers=["Trans_ID","Date","Amount","Type","Description"]))
+
+def update():
+    while True:
+        try:
+            i = int(input("Enter the transaction ID : "))
+            if not id_exists(i):
+                print("Provided transaction ID doesn't exist")
+                continue
+            break
+        except ValueError:
+            print("Invalid ID!")
+    
+    ask_date = "Enter transaction date (dd-mm-yyyy) or press 'enter' for today's date : "
+    date = get_date(ask_date, True)
+    amount = get_amount()
+    transaction_type = get_type()
+    description = get_description()
+    if update_transaction(i,date,amount,transaction_type,description):
+        print(f"Transaction ID {i} updated successfully")
     
 
 def main():
@@ -85,8 +116,10 @@ def main():
         print("1. Add a transaction.")
         print("2. View Transactions and a summary within a date range.")
         print("3. Delete a transaction.")
-        print("4. Exit.")
-        choice = input("Enter your choice (1-4) : ").lstrip('0')
+        print("4. View transaction by ID.")
+        print("5. Update transaction by ID.")
+        print("6. Exit.")
+        choice = input("Enter your choice (1-6) : ").lstrip('0')
 
         match choice:
             case '1':
@@ -96,6 +129,10 @@ def main():
             case '3':
                 delete()
             case '4':
+                get_by_id()
+            case '5':
+                update()
+            case '6':
                 print("Thank you for using the Expense Tracker... Exiting now ...")
                 cont = False
             case _:
