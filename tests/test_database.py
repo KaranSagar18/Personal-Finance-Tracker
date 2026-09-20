@@ -1,6 +1,6 @@
 import pytest
 import database
-from database import create_transaction_table,add_transaction,get_transactions
+from database import create_transaction_table,add_transaction,get_transactions,delete_transaction
 import sqlite3
 
 @pytest.fixture
@@ -74,3 +74,14 @@ def test_get_transactions_multiple_transactions_on_same_date(db_with_table):
     
     result = get_transactions("2026-09-02", "2026-09-02")
     assert len(result)==3
+
+def test_delete_transaction_id_exists(db_with_table):
+    add_transaction("2026-09-02", 50000, "credit","Salary")
+    assert delete_transaction(1) == True
+    with sqlite3.connect(db_with_table) as conn:
+        cursor = conn.cursor()
+        result = cursor.execute('SELECT * FROM transactions WHERE id = 1').fetchone()
+        assert result is None
+
+def test_delete_transaction_id_doesnt_exist(db_with_table):
+    assert delete_transaction(1) == False

@@ -40,7 +40,9 @@ def add() -> None:
     amount = get_amount()
     transaction_type = get_type()
     description = get_description()
-    add_transaction(date,amount,transaction_type,description)
+    id = add_transaction(date,amount,transaction_type,description)
+    print(f"Transaction added successfully ! Transaction ID : {id}")
+    
 
 def transactions():
     start_date = get_date("Please enter the start date for the range (Leave blank for today's date) : ",True)
@@ -61,32 +63,46 @@ def transactions():
     plot_transactions(df)
 
 def delete():
-    del_id = input("Enter the transaction ID you wish to delete : ")
-    delete_transaction(del_id)
-    print(f"Transaction ID {del_id} deleted succesfully")
+    while True:
+        try:
+            del_id = int(input("Enter the transaction ID you wish to delete : "))
+            break
+        except ValueError:
+            print("Enter a valid integer transaction ID : ")
+    success =  delete_transaction(del_id)
+    if success:
+        print(f"Transaction ID {del_id} deleted successfully")
+    else:
+        print(f"Transaction ID {del_id} not found")
+        
     
 
 def main():
     create_transaction_table()
     print("\nMake a choice by selecting the corresponding number : ")
-    while True:
+    cont = True
+    while cont:
         print("1. Add a transaction.")
         print("2. View Transactions and a summary within a date range.")
         print("3. Delete a transaction.")
         print("4. Exit.")
-        choice = input("Enter your choice (1-3) : ").lstrip('0')
+        choice = input("Enter your choice (1-4) : ").lstrip('0')
 
-        if choice == '4':
-            print("Thank you for using the Expense Tracker... Exiting now ...")
-            break
-        elif choice == '1':
-            add()
-        elif choice == '2':
-            transactions()
-        elif choice == '3':
-            delete()
-        else: 
-            print("Please enter a valid choice : ")
+        match choice:
+            case '1':
+                add()
+            case '2':
+                transactions()
+            case '3':
+                delete()
+            case '4':
+                print("Thank you for using the Expense Tracker... Exiting now ...")
+                cont = False
+            case _:
+                print("Please enter a valid choice : ")
+        if cont:
+            cont = input("Continue? (Y/N): ").lower() == 'y'
+    print("Thank you for using the Expense Tracker... Exiting now ...")
 
 if __name__ == "__main__" :
     main()

@@ -19,6 +19,7 @@ def add_transaction(date,amount,type,description):
     with sqlite3.connect(db_file) as conn:
         cursor = conn.cursor()
         cursor.execute("INSERT INTO transactions (date,amount,type,description) VALUES (? , ? , ? ,?)",(date,amount,type,description))
+        return cursor.lastrowid
 
 def get_transactions(start_date, end_date) -> list[tuple]:
     with sqlite3.connect(db_file) as conn:
@@ -30,4 +31,4 @@ def delete_transaction(id_to_delete):
     with sqlite3.connect(db_file) as conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM transactions WHERE id = ?",(id_to_delete,))
-    
+        return cursor.rowcount == 1
