@@ -107,7 +107,6 @@ def update():
     if update_transaction(i,date,amount,transaction_type,description):
         print(f"Transaction ID {i} updated successfully")
     
-
 def main():
     create_transaction_table()
     print("\nMake a choice by selecting the corresponding number : ")
@@ -133,7 +132,6 @@ def main():
             case '5':
                 update()
             case '6':
-                print("Thank you for using the Expense Tracker... Exiting now ...")
                 cont = False
             case _:
                 print("Please enter a valid choice : ")
@@ -143,5 +141,3 @@ def main():
 
 if __name__ == "__main__" :
     main()
-
-
