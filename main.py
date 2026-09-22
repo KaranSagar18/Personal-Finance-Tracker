@@ -1,5 +1,5 @@
 import pandas as pd
-from data_entry import get_date,get_type,get_amount,get_description
+from data_entry import get_date,get_transaction_id,get_transaction_details,get_date_optional,get_amount_optional,get_type_optional,get_description_optional
 from tabulate import tabulate
 import matplotlib.pyplot as plt
 from database import add_transaction,get_transactions,create_transaction_table,delete_transaction,id_exists,update_transaction
@@ -9,19 +9,43 @@ def list_to_df(list_of_trans : list) -> pd.DataFrame:
     df["Date"] = pd.to_datetime(df["Date"])
     return df
 
+def print_transactions_table(transactions : list[tuple]) -> None:
+    if not transactions:
+        print("No transactions to display!")
+        return
+    
+    formatted_rows = [
+        (t[0], t[1], f"Rs. {t[2]:.2f}", t[3].capitalize(), t[4] or "N/A")
+        for t in transactions
+    ]
+    print(
+        tabulate(
+            formatted_rows,
+            headers=("Trans_ID","Date","Amount","Type","Description"),
+            tablefmt="rounded_outline"
+        )
+    )
+
 def plot_transactions(df : pd.DataFrame) -> None:
-    df.set_index("Date", inplace=True)
-    df.sort_index(inplace=True)
+    plot_df = df.set_index("Date").sort_index()
+    start=plot_df.index.min()
+    end=plot_df.index.max()
+    if start == end:
+        start -= pd.Timedelta(days=1)
+        end += pd.Timedelta(days=1)
+    all_dates = pd.date_range(start,end,freq='D')
 
     income_df = (
-        df[df["Type"]=='credit'] ["Amount"]
+        plot_df[plot_df["Type"]=='credit'] ["Amount"]
         .resample('D')
         .sum()
+        .reindex(all_dates,fill_value=0)
         )
     expense_df = (
-        df[df["Type"]=='debit'] ["Amount"]
+        plot_df[plot_df["Type"]=='debit'] ["Amount"]
         .resample('D')
         .sum()
+        .reindex(all_dates,fill_value=0)
         )
 
     plt.figure(figsize=(10,5))
@@ -35,23 +59,22 @@ def plot_transactions(df : pd.DataFrame) -> None:
     plt.show()
 
 def add() -> None:
-    ask_date = "Enter transaction date (dd-mm-yyyy) or press 'enter' for today's date : "
-    date = get_date(ask_date, True)
-    amount = get_amount()
-    transaction_type = get_type()
-    description = get_description()
-    id = add_transaction(date,amount,transaction_type,description)
+    id = add_transaction(*get_transaction_details())
     print(f"Transaction added successfully ! Transaction ID : {id}")
     
-def transactions():
+def transactions() ->None:
     start_date = get_date("Please enter the start date for the range (Leave blank for today's date) : ",True)
     end_date = get_date("Please enter the end date for range (Leave blank for today's date) : ",True)
-    list_of_trans = get_transactions(start_date,end_date)
-    if not list_of_trans:
-        print("No transactions to print!")
+
+    if start_date>end_date:
+        print("Error : Start date cannot be after end date.")
         return
-    else:
-        print(tabulate(list_of_trans,headers=("Trans_ID","Date","Amount","Type","Description")))
+
+    list_of_trans = get_transactions(start_date,end_date)
+    print_transactions_table(list_of_trans)
+    if not list_of_trans:
+        return
+      
     df = list_to_df(list_of_trans)
     total_income = df[df["Type"] == "credit"]["Amount"].sum()
     total_expense = df[df["Type"] == "debit"]["Amount"].sum()
@@ -62,50 +85,45 @@ def transactions():
     if input("Do you wish to see graph for the above transactions? (Y/N) : ").lower() == 'y':
         plot_transactions(df)
 
-def delete():
-    while True:
-        try:
-            del_id = int(input("Enter the transaction ID you wish to delete : "))
-            break
-        except ValueError:
-            print("Enter a valid integer transaction ID : ")
+def delete() -> None:
+    del_id = get_transaction_id("Enter the transaction ID you wish to delete: ")
     success =  delete_transaction(del_id)
     if success:
         print(f"Transaction ID {del_id} deleted successfully")
     else:
         print(f"Transaction ID {del_id} not found")
 
-def get_by_id():
-    while True:
-        try:
-            i = int(input("Enter the transaction ID : "))
-            break
-        except ValueError:
-            print("Invalid ID!")
+def get_by_id() -> None:
+    i = get_transaction_id()
     transaction = id_exists(i)
     if not transaction:
         print("Provided transaction ID doesn't exist")
     else:
-        print(tabulate(transaction,headers=["Trans_ID","Date","Amount","Type","Description"]))
+        print_transactions_table([transaction])
 
 def update():
     while True:
-        try:
-            i = int(input("Enter the transaction ID : "))
-            if not id_exists(i):
-                print("Provided transaction ID doesn't exist")
-                continue
+        i = get_transaction_id("Enter the transaction ID to update (or 0 to cancel): ",allow_zero=True)
+        if i == 0:
+            print("Update cancelled")
+            return
+        record =  id_exists(i)
+        if record:
             break
-        except ValueError:
-            print("Invalid ID!")
-    
-    ask_date = "Enter transaction date (dd-mm-yyyy) or press 'enter' for today's date : "
-    date = get_date(ask_date, True)
-    amount = get_amount()
-    transaction_type = get_type()
-    description = get_description()
-    if update_transaction(i,date,amount,transaction_type,description):
+        print(f"Transaction ID {i} doesn't exist. Please try again.")
+
+    _,curr_date,curr_amt,curr_type,curr_desc = record
+
+    print(f"\n--- Updating Transaction #{i} ---")
+    print("Press [Enter] on any field to keep the current value.\n")
+    new_date = get_date_optional(curr_date)
+    new_amount = get_amount_optional(curr_amt)
+    new_type = get_type_optional(curr_type)
+    new_desc = get_description_optional(curr_desc)
+    if update_transaction(i,new_date,new_amount,new_type,new_desc):
         print(f"Transaction ID {i} updated successfully")
+    else:
+        print(f"Failed to update Transaction ID {i}.")
     
 def main():
     create_transaction_table()
