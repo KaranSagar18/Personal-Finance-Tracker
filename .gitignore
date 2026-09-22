@@ -1,3 +1,5 @@
 Transactions.csv
 __pycache__/
 *.pyc
+*.db
+test_db.py
